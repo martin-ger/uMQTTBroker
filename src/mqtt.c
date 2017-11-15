@@ -944,3 +944,59 @@ void ICACHE_FLASH_ATTR MQTT_OnPublished(MQTT_Client * mqttClient, MqttCallback p
 void ICACHE_FLASH_ATTR MQTT_OnTimeout(MQTT_Client * mqttClient, MqttCallback timeoutCb) {
     mqttClient->timeoutCb = timeoutCb;
 }
+
+
+void ICACHE_FLASH_ATTR
+MQTT_SetUserId(MQTT_Client *mqttClient, const char* client_id)
+{
+  if (mqttClient->connect_info.client_id != 0) {
+    os_free(mqttClient->connect_info.client_id);
+    mqttClient->connect_info.client_id = 0;
+  }
+  
+  
+  uint32_t len = os_strlen(client_id);
+  
+  mqttClient->connect_info.client_id = (uint8_t*)os_zalloc(len + 1);
+  if (len) {
+    os_strcpy(mqttClient->connect_info.client_id, client_id);
+  }
+  mqttClient->connect_info.client_id[len] = 0;
+}
+
+void ICACHE_FLASH_ATTR
+MQTT_SetUserPwd(MQTT_Client *mqttClient, const char* user, const char* pwd)
+{
+  uint32_t len;
+  
+  // free username
+  if (mqttClient->connect_info.username != 0) {
+    os_free(mqttClient->connect_info.username);
+    mqttClient->connect_info.username = 0;
+  }
+  // free password
+  if (mqttClient->connect_info.password != 0) {
+    os_free(mqttClient->connect_info.password);
+    mqttClient->connect_info.password = 0;
+  }
+  
+  
+  // copy username
+  len = os_strlen(user);
+  mqttClient->connect_info.username = (uint8_t*)os_zalloc(len + 1);
+  if (len) {
+    os_strcpy(mqttClient->connect_info.username, user);
+  }
+  mqttClient->connect_info.username[len] = 0;
+  
+  
+  // copy password
+  len = os_strlen(pwd);
+  mqttClient->connect_info.password = (uint8_t*)os_zalloc(len + 1);
+  if (len) {
+    os_strcpy(mqttClient->connect_info.password, pwd);
+  }
+  mqttClient->connect_info.password[len] = 0;
+  
+}
+

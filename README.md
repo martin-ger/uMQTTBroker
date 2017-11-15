@@ -19,9 +19,11 @@ The broker does not yet support:
 - non-clear sessions
 - TLS
 
-## API
+If you are searching for a complete ready-to-run MQTT broker for the ESP8266 with additional features (persistent configuration, scripting support and much more) have a look at https://github.com/martin-ger/esp_mqtt .
 
-The broker is started by simply including:
+## API MQTT Broker
+
+The MQTT broker is started by simply including:
 
 ```c
 #include "uMQTTBroker.h"
@@ -71,4 +73,20 @@ Sample: in the Arduino setup() initialize the WiFi connection (client or SoftAP,
 MQTT_server_start(1883, 30, 30);
 ```
 
-You can find a sample sketch in the examples.
+You can find a sample sketch here https://github.com/martin-ger/uMQTTBroker/tree/master/examples .
+
+## API MQTT Client
+
+To use the MQTT client functionality include:
+
+```c
+#include "MQTT.h"
+```
+
+This code is taken from Ingo Randolf from esp-mqtt-arduino (https://github.com/i-n-g-o/esp-mqtt-arduino). It is a wrapper to tuanpmt's esp_mqtt client library. Look here https://github.com/i-n-g-o/esp-mqtt-arduino/tree/master/examples for code samples.
+
+# Thanks
+- tuanpmt for esp_mqtt (https://github.com/tuanpmt/esp_mqtt )
+- Ingo Randolf for esp-mqtt-arduino (https://github.com/i-n-g-o/esp-mqtt-arduino)
+- Ian Craggs for mqtt_topic
+- many others contributing to open software (for the ESP8266)

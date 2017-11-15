@@ -135,6 +135,10 @@ void ICACHE_FLASH_ATTR MQTT_InitConnection(MQTT_Client *mqttClient, uint8_t* hos
 BOOL ICACHE_FLASH_ATTR MQTT_InitClient(MQTT_Client *mqttClient, uint8_t* client_id, uint8_t* client_user, uint8_t* client_pass, uint32_t keepAliveTime, uint8_t cleanSession);
 void ICACHE_FLASH_ATTR MQTT_DeleteClient(MQTT_Client *mqttClient);
 void ICACHE_FLASH_ATTR MQTT_InitLWT(MQTT_Client *mqttClient, uint8_t* will_topic, uint8_t* will_msg, uint8_t will_qos, uint8_t will_retain);
+
+void ICACHE_FLASH_ATTR MQTT_SetUserId(MQTT_Client *mqttClient, const char* client_id);
+void ICACHE_FLASH_ATTR MQTT_SetUserPwd(MQTT_Client *mqttClient, const char* user_id, const char* pwd);
+
 void ICACHE_FLASH_ATTR MQTT_OnConnected(MQTT_Client *mqttClient, MqttCallback connectedCb);
 void ICACHE_FLASH_ATTR MQTT_OnDisconnected(MQTT_Client *mqttClient, MqttCallback disconnectedCb);
 void ICACHE_FLASH_ATTR MQTT_OnPublished(MQTT_Client *mqttClient, MqttCallback publishedCb);
