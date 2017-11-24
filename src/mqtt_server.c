@@ -455,6 +455,11 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 			MQTT_server_disconnectClientCon(clientcon);
 			return;
 		    }
+		    if (clientcon->connect_info.will_topic[0] == '$') {
+			MQTT_WARNING("MQTT: Last Will topic starts with '$'\r\n");
+			MQTT_server_disconnectClientCon(clientcon);
+			return;
+		    }
 		    MQTT_INFO("MQTT: LWT topic %s\r\n", clientcon->connect_info.will_topic);
 		} else {
 		    MQTT_ERROR("MQTT: Out of mem\r\n");
@@ -698,6 +703,11 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 	    topic_buffer[topic_len] = 0;
 	    data_len = clientcon->mqtt_state.in_buffer_length;
 	    data = (uint8_t *) mqtt_get_publish_data(clientcon->mqtt_state.in_buffer, &data_len);
+
+	    if (topic_buffer[0] == '$') {
+		MQTT_WARNING("MQTT: Topic starts with '$'\r\n");
+		break;
+	    }
 
 	    MQTT_INFO("MQTT: Published topic \"%s\"\r\n", topic_buffer);
 	    MQTT_INFO("MQTT: Matches to:\r\n");

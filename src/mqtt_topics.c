@@ -146,9 +146,13 @@ int ICACHE_FLASH_ATTR Topics_matches(char *wildTopic, int wildcards, char *topic
 	goto exit;
     }
 
-    if (strcmp(wildTopic, MULTI_LEVEL_WILDCARD) == 0 ||	/* Hash matches anything... */
-	strcmp(wildTopic, topic) == 0) {
+    if (strcmp(wildTopic, topic) == 0) {
 	rc = true;
+	goto exit;
+    }
+
+    if (strcmp(wildTopic, MULTI_LEVEL_WILDCARD) == 0) { /* Hash matches anything, but starting with '$'... */
+	rc = (topic[0] == '$') ? false : true;
 	goto exit;
     }
 
