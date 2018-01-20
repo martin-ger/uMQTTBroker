@@ -102,7 +102,7 @@ bool ICACHE_FLASH_ATTR delete_client_by_id(const uint8_t *id) {
     for (clientcon = clientcon_list; clientcon != NULL; clientcon = clientcon->next) {
 	if (os_strcmp(id, clientcon->connect_info.client_id) == 0) {
 	    MQTT_INFO("MQTT: Disconnect client: %s\r\n", clientcon->connect_info.client_id);
-	    clientcon->connState = TCP_DISCONNECT;
+	    clientcon->connState = TCP_CLIENT_FORCE_DISCONNECT;
 	    system_os_post(MQTT_SERVER_TASK_PRIO, 0, (os_param_t) clientcon);
 	    return true;
 	}
@@ -305,7 +305,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 
     struct espconn *pCon = (struct espconn *)arg;
 
-    MQTT_INFO("MQTT_ClientCon_recv_cb(): %d bytes of data received\n", len);
+    MQTT_INFO("MQTT_ClientCon_recv_cb(): %d bytes of data received\r\n", len);
 
     MQTT_ClientCon *clientcon = (MQTT_ClientCon *) pCon->reverse;
     if (clientcon == NULL) {
@@ -427,8 +427,8 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 		delete_client_by_id(client_id);
 
 		clientcon->connect_info.client_id = new_id;
-		MQTT_INFO("MQTT: Client id %s\r\n", clientcon->connect_info.client_id);
 	    }
+	    MQTT_INFO("MQTT: Client id \"%s\"\r\n", clientcon->connect_info.client_id);
 	    msg_used_len += 2 + id_len;
 
 	    // Get the LWT
@@ -808,7 +808,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_discon_cb(void *arg) {
     struct espconn *pCon = (struct espconn *)arg;
     MQTT_ClientCon *clientcon = (MQTT_ClientCon *) pCon->reverse;
 
-    MQTT_INFO("MQTT_ClientCon_discon_cb(): client disconnected\n");
+    MQTT_INFO("MQTT_ClientCon_discon_cb(): client disconnected\r\n");
     MQTT_server_deleteClientCon(clientcon);
 }
 
@@ -816,7 +816,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_sent_cb(void *arg) {
     struct espconn *pCon = (struct espconn *)arg;
     MQTT_ClientCon *clientcon = (MQTT_ClientCon *) pCon->reverse;
 
-    MQTT_INFO("MQTT_ClientCon_sent_cb(): Data sent\n");
+    MQTT_INFO("MQTT_ClientCon_sent_cb(): Data sent\r\n");
 
     clientcon->sendTimeout = 0;
 
@@ -878,6 +878,7 @@ void ICACHE_FLASH_ATTR MQTT_ServerTask(os_event_t * e) {
 
     switch (clientcon->connState) {
 
+    case TCP_CLIENT_FORCE_DISCONNECT:
     case TCP_DISCONNECT:
 	MQTT_INFO("MQTT: Disconnect\r\n");
 	espconn_disconnect(clientcon->pCon);
