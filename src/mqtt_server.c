@@ -37,6 +37,8 @@ LOCAL MqttDataCallback local_data_cb = NULL;
 LOCAL MqttConnectCallback local_connect_cb = NULL;
 LOCAL MqttAuthCallback local_auth_cb = NULL;
 
+MQTT_ClientCon dummy_clientcon;
+
 //#undef MQTT_INFO
 //#define MQTT_INFO os_printf
 #define MQTT_WARNING os_printf
@@ -92,20 +94,6 @@ bool ICACHE_FLASH_ATTR publish_retainedtopic(retained_entry * entry, void* user_
 	 clientcon->mqtt_state.outbound_message->length) == -1) {
 	MQTT_ERROR("MQTT: Queue full\r\n");
 	return false;
-    }
-    return true;
-}
-
-bool ICACHE_FLASH_ATTR delete_client_by_id(const uint8_t *id) {
-    MQTT_ClientCon *clientcon = clientcon_list;
-
-    for (clientcon = clientcon_list; clientcon != NULL; clientcon = clientcon->next) {
-	if (os_strcmp(id, clientcon->connect_info.client_id) == 0) {
-	    MQTT_INFO("MQTT: Disconnect client: %s\r\n", clientcon->connect_info.client_id);
-	    clientcon->connState = TCP_CLIENT_FORCE_DISCONNECT;
-	    system_os_post(MQTT_SERVER_TASK_PRIO, 0, (os_param_t) clientcon);
-	    return true;
-	}
     }
     return true;
 }
@@ -167,17 +155,7 @@ bool ICACHE_FLASH_ATTR MQTT_server_deleteClientCon(MQTT_ClientCon * mqttClientCo
     if (mqttClientCon == NULL)
 	return;
 
-    if (mqttClientCon->connState == TCP_DISCONNECT) {
-	MQTT_INFO("MQTT: Broker already disconnecting\r\n");
-	mqttClientCon->connState = TCP_CLIENT_DISCONNECTED;
-	return;
-    }
-
     os_timer_disarm(&mqttClientCon->mqttTimer);
-
-    if (mqttClientCon->pCon != NULL) {
-	espconn_delete(mqttClientCon->pCon);
-    }
 
     MQTT_ClientCon **p = &clientcon_list;
     while (*p != mqttClientCon && *p != NULL) {
@@ -270,6 +248,7 @@ void ICACHE_FLASH_ATTR MQTT_server_cleanupClientCons() {
 	clientcon_tmp = clientcon;
 	clientcon = clientcon->next;
 	if (clientcon_tmp->pCon->state == ESPCONN_CLOSE) {
+	    espconn_delete(clientcon_tmp->pCon);
 	    MQTT_server_deleteClientCon(clientcon_tmp);
 	}
     }
@@ -278,10 +257,10 @@ void ICACHE_FLASH_ATTR MQTT_server_cleanupClientCons() {
 void ICACHE_FLASH_ATTR MQTT_server_disconnectClientCon(MQTT_ClientCon * mqttClientCon) {
     MQTT_INFO("MQTT: ServerDisconnect\r\n");
 
-    mqttClientCon->mqtt_state.message_length_read = 0;
-    mqttClientCon->connState = TCP_DISCONNECT;
-    system_os_post(MQTT_SERVER_TASK_PRIO, 0, (os_param_t) mqttClientCon);
-    os_timer_disarm(&mqttClientCon->mqttTimer);
+    dummy_clientcon.pCon = mqttClientCon->pCon;
+    dummy_clientcon.pCon->reverse = &dummy_clientcon;
+    MQTT_server_deleteClientCon(mqttClientCon);
+    system_os_post(MQTT_SERVER_TASK_PRIO, 0, (os_param_t) &dummy_clientcon);
 }
 
 void ICACHE_FLASH_ATTR mqtt_server_timer(void *arg) {
@@ -289,6 +268,19 @@ void ICACHE_FLASH_ATTR mqtt_server_timer(void *arg) {
 
     if (clientcon->sendTimeout > 0)
 	clientcon->sendTimeout--;
+}
+
+bool ICACHE_FLASH_ATTR delete_client_by_id(const uint8_t *id) {
+    MQTT_ClientCon *clientcon = clientcon_list;
+
+    for (clientcon = clientcon_list; clientcon != NULL; clientcon = clientcon->next) {
+	if (os_strcmp(id, clientcon->connect_info.client_id) == 0) {
+	    MQTT_INFO("MQTT: Disconnect client: %s\r\n", clientcon->connect_info.client_id);
+	    MQTT_server_disconnectClientCon(clientcon);
+	    return true;
+	}
+    }
+    return true;
 }
 
 static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, unsigned short len) {
@@ -809,7 +801,12 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_discon_cb(void *arg) {
     MQTT_ClientCon *clientcon = (MQTT_ClientCon *) pCon->reverse;
 
     MQTT_INFO("MQTT_ClientCon_discon_cb(): client disconnected\r\n");
-    MQTT_server_deleteClientCon(clientcon);
+
+    if (clientcon != &dummy_clientcon) {
+	MQTT_server_deleteClientCon(clientcon);
+    } else {
+	clientcon->pCon = NULL;
+    }
 }
 
 static void ICACHE_FLASH_ATTR MQTT_ClientCon_sent_cb(void *arg) {
@@ -821,8 +818,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_sent_cb(void *arg) {
     clientcon->sendTimeout = 0;
 
     if (clientcon->connState == TCP_DISCONNECTING) {
-	clientcon->connState = TCP_DISCONNECT;
-	system_os_post(MQTT_SERVER_TASK_PRIO, 0, (os_param_t) clientcon);
+	MQTT_server_disconnectClientCon(clientcon);
     }
 
     activate_next_client();
@@ -834,7 +830,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_connected_cb(void *arg) {
     MQTT_ClientCon *mqttClientCon;
     pespconn->reverse = NULL;
 
-    MQTT_INFO("MQTT_ClientCon_connected_cb(): Client connected\r\n");
+    os_printf("MQTT_ClientCon_connected_cb(): Client connected\r\n");
 
     espconn_regist_sentcb(pespconn, MQTT_ClientCon_sent_cb);
     espconn_regist_disconcb(pespconn, MQTT_ClientCon_discon_cb);
@@ -878,15 +874,12 @@ void ICACHE_FLASH_ATTR MQTT_ServerTask(os_event_t * e) {
 
     switch (clientcon->connState) {
 
-    case TCP_CLIENT_FORCE_DISCONNECT:
     case TCP_DISCONNECT:
 	MQTT_INFO("MQTT: Disconnect\r\n");
-	espconn_disconnect(clientcon->pCon);
-	break;
 
-    case TCP_CLIENT_DISCONNECTED:
-	MQTT_INFO("MQTT: Client disconnected\r\n");
-	MQTT_server_deleteClientCon(clientcon);
+	if (clientcon->pCon != NULL)
+	    espconn_disconnect(clientcon->pCon);
+
 	break;
 
     case TCP_DISCONNECTING:
@@ -904,9 +897,10 @@ void ICACHE_FLASH_ATTR MQTT_ServerTask(os_event_t * e) {
 
 	    clientcon->mqtt_state.outbound_message = NULL;
 	    break;
-	}
-	if (clientcon->connState == TCP_DISCONNECTING) {
-	    MQTT_server_disconnectClientCon(clientcon);
+	} else {
+	    if (clientcon->connState == TCP_DISCONNECTING) {
+		MQTT_server_disconnectClientCon(clientcon);
+	    }
 	}
 	break;
     }
@@ -920,6 +914,8 @@ bool ICACHE_FLASH_ATTR MQTT_server_start(uint16_t portno, uint16_t max_subscript
     if (!create_retainedlist(max_retained_topics))
 	return false;
     clientcon_list = NULL;
+
+    dummy_clientcon.connState = TCP_DISCONNECT;
 
     struct espconn *pCon = (struct espconn *)os_zalloc(sizeof(struct espconn));
     if (pCon == NULL)
