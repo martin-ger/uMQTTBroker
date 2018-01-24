@@ -830,7 +830,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_connected_cb(void *arg) {
     MQTT_ClientCon *mqttClientCon;
     pespconn->reverse = NULL;
 
-    os_printf("MQTT_ClientCon_connected_cb(): Client connected\r\n");
+    MQTT_INFO("MQTT_ClientCon_connected_cb(): Client connected\r\n");
 
     espconn_regist_sentcb(pespconn, MQTT_ClientCon_sent_cb);
     espconn_regist_disconcb(pespconn, MQTT_ClientCon_discon_cb);
