@@ -268,6 +268,13 @@ void ICACHE_FLASH_ATTR mqtt_server_timer(void *arg) {
 
     if (clientcon->sendTimeout > 0)
 	clientcon->sendTimeout--;
+
+    if (clientcon->connectionTimeout > 0) {
+	clientcon->connectionTimeout--;
+    } else {
+        MQTT_WARNING("MQTT: Connection timeout %ds\r\n", 2*clientcon->connect_info.keepalive+10);
+	MQTT_server_disconnectClientCon(clientcon);
+    }
 }
 
 bool ICACHE_FLASH_ATTR delete_client_by_id(const uint8_t *id) {
@@ -776,6 +783,8 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 	break;
     }
 
+    clientcon->connectionTimeout = 2 * clientcon->connect_info.keepalive+10;
+
     // More than one MQTT command in the packet?
     len = clientcon->mqtt_state.message_length_read;
     if (clientcon->mqtt_state.message_length < len) {
@@ -859,6 +868,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_connected_cb(void *arg) {
 
     MQTT_server_initClientCon(mqttClientCon);
 
+    mqttClientCon->connectionTimeout = 40;
     os_timer_setfn(&mqttClientCon->mqttTimer, (os_timer_func_t *) mqtt_server_timer, mqttClientCon);
     os_timer_arm(&mqttClientCon->mqttTimer, 1000, 1);
 }

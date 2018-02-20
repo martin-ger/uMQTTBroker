@@ -32,6 +32,7 @@ typedef struct _MQTT_ClientCon {
 //  MqttDataCallback dataCb;
   ETSTimer mqttTimer;
   uint32_t sendTimeout;
+  uint32_t connectionTimeout;
   tConnState connState;
   QUEUE msgQueue;
   uint8_t protocolVersion;
