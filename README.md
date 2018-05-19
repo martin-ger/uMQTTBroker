@@ -3,6 +3,10 @@ MQTT Broker library for ESP8266 Arduino
 
 You can start an MQTT broker in any ESP Arduino project. Just clone (or download the zip-file and extract it) into the libraries directory of your Arduino ESP8266 installation.
 
+**Important: Use the setting "lwip Variant: 1.4 High Bandwidth" in the "Tools" menu**
+
+lwip 2.0 has some strange behaviour that causes the socket to block after 5 connections.
+
 Thanks to Tuan PM for sharing his MQTT client library https://github.com/tuanpmt/esp_mqtt as a basis with us. The modified code still contains the complete client functionality from the original esp_mqtt lib, but it has been extended by the basic broker service.
 
 The broker does support:
@@ -40,6 +44,7 @@ Your code can locally interact with the broker using these functions:
 bool MQTT_local_publish(uint8_t* topic, uint8_t* data, uint16_t data_length, uint8_t qos, uint8_t retain);
 bool MQTT_local_subscribe(uint8_t* topic, uint8_t qos);
 bool MQTT_local_unsubscribe(uint8_t* topic);
+
 
 void MQTT_server_onData(MqttDataCallback dataCb);
 ```
