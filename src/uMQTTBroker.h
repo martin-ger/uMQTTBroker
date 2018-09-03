@@ -2,6 +2,9 @@
 #define _MQTT_SERVER_H_
 
 #include "user_interface.h"
+#include "IPAddress.h"
+#include "string.h"
+
 extern "C" {
 
 // Interface for starting the broker
@@ -36,5 +39,34 @@ void clear_retainedtopics();
 int serialize_retainedtopics(char *buf, int len);
 bool deserialize_retainedtopics(char *buf, int len);
 }
+
+class uMQTTBroker
+{
+private:
+    static uMQTTBroker *TheBroker;
+    uint16_t _portno;
+    uint16_t _max_subscriptions;
+    uint16_t _max_retained_topics;
+
+    static bool _onConnect(struct espconn *pesp_conn, uint16_t client_count);
+    static bool _onAuth(const char* username, const char *password, struct espconn *pesp_conn);
+    static void _onData(uint32_t *args, const char* topic, uint32_t topic_len, const char *data, uint32_t length);
+
+public:
+    uMQTTBroker(uint16_t portno=1883, uint16_t max_subscriptions=30, uint16_t max_retained_topics=30);
+
+    void init();
+
+    virtual bool onConnect(IPAddress addr, uint16_t client_count);
+    virtual bool onAuth(String username, String password);
+    virtual bool onData(String topic, const char *data, uint32_t length);
+
+    virtual bool publish(String topic, uint8_t* data, uint16_t data_length, uint8_t qos=0, uint8_t retain=0);
+    virtual bool publish(String topic, String data, uint8_t qos=0, uint8_t retain=0);
+    virtual bool subscribe(String topic, uint8_t qos=0);
+    virtual bool unsubscribe(String topic);
+
+    void cleanupClientConnections();
+};
 
 #endif /* _MQTT_SERVER_H_ */
