@@ -46,7 +46,7 @@ uMQTTBroker *uMQTTBroker::TheBroker;
 	return true;
     }
 
-    bool uMQTTBroker::onData(String topic, const char *data, uint32_t length) {
+    void uMQTTBroker::onData(String topic, const char *data, uint32_t length) {
     }
 
     bool uMQTTBroker::publish(String topic, uint8_t* data, uint16_t data_length, uint8_t qos, uint8_t retain) {

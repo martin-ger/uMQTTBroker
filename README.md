@@ -37,7 +37,7 @@ public:
 
     virtual bool onConnect(IPAddress addr, uint16_t client_count);
     virtual bool onAuth(String username, String password);
-    virtual bool onData(String topic, const char *data, uint32_t length);
+    virtual void onData(String topic, const char *data, uint32_t length);
 
     virtual bool publish(String topic, uint8_t* data, uint16_t data_length, uint8_t qos=0, uint8_t retain=0);
     virtual bool publish(String topic, String data, uint8_t qos=0, uint8_t retain=0);
