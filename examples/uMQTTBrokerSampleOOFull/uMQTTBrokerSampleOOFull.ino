@@ -32,7 +32,7 @@ public:
       return true;
     }
     
-    virtual bool onData(String topic, const char *data, uint32_t length) {
+    virtual void onData(String topic, const char *data, uint32_t length) {
       char data_str[length+1];
       os_memcpy(data_str, data, length);
       data_str[length] = '\0';
