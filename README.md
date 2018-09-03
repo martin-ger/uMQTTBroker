@@ -25,8 +25,31 @@ The broker does not yet support:
 
 If you are searching for a complete ready-to-run MQTT broker for the ESP8266 with additional features (persistent configuration, scripting support and much more) have a look at https://github.com/martin-ger/esp_mqtt .
 
-## API MQTT Broker
+## API MQTT Broker (C++-style)
+The MQTT broker has a new C++ style API with a broker class:
+```c
+class uMQTTBroker
+{
+public:
+    uMQTTBroker(uint16_t portno=1883, uint16_t max_subscriptions=30, uint16_t max_retained_topics=30);
 
+    void init();
+
+    virtual bool onConnect(IPAddress addr, uint16_t client_count);
+    virtual bool onAuth(String username, String password);
+    virtual bool onData(String topic, const char *data, uint32_t length);
+
+    virtual bool publish(String topic, uint8_t* data, uint16_t data_length, uint8_t qos=0, uint8_t retain=0);
+    virtual bool publish(String topic, String data, uint8_t qos=0, uint8_t retain=0);
+    virtual bool subscribe(String topic, uint8_t qos=0);
+    virtual bool unsubscribe(String topic);
+
+    void cleanupClientConnections();
+};
+```
+Use the broker as shown in oo-examples found in https://github.com/martin-ger/uMQTTBroker/tree/master/examples .
+
+## API MQTT Broker (C-style)
 The MQTT broker is started by simply including:
 
 ```c
