@@ -153,7 +153,7 @@ bool ICACHE_FLASH_ATTR MQTT_server_deleteClientCon(MQTT_ClientCon * mqttClientCo
     MQTT_INFO("MQTT: DeleteClientCon\r\n");
 
     if (mqttClientCon == NULL)
-	return;
+	return true;
 
     os_timer_disarm(&mqttClientCon->mqttTimer);
 
