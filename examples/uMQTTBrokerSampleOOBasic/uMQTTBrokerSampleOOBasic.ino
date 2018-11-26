@@ -22,6 +22,7 @@ bool WiFiAP = false;      // Do yo want the ESP as AP?
 void startWiFiClient()
 {
   Serial.println("Connecting to "+(String)ssid);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
   
   while (WiFi.status() != WL_CONNECTED) {
@@ -36,6 +37,7 @@ void startWiFiClient()
 
 void startWiFiAP()
 {
+  WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, pass);
   Serial.println("AP started");
   Serial.println("IP address: " + WiFi.softAPIP().toString());
