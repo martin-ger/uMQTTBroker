@@ -5,6 +5,10 @@
 #include "IPAddress.h"
 #include "string.h"
 
+#ifndef ipv4_addr_t
+#define ipv4_addr_t ip_addr_t
+#endif
+
 extern "C" {
 
 // Interface for starting the broker

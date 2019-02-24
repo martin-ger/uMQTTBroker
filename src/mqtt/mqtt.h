@@ -34,6 +34,11 @@
 #include "user_interface.h"
 
 #include "queue.h"
+
+#ifndef ipv4_addr_t
+#define ipv4_addr_t ip_addr_t
+#endif
+
 typedef struct mqtt_event_data_t
 {
   uint8_t type;

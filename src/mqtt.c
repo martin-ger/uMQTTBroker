@@ -29,6 +29,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "mqtt/mqtt.h"
 #include "user_interface.h"
 #include "osapi.h"
 #include "espconn.h"
@@ -38,7 +39,6 @@
 #include "mqtt/debug.h"
 #include "user_config.h"
 #include "mqtt/defaults.h"
-#include "mqtt/mqtt.h"
 #include "mqtt/queue.h"
 
 #define MQTT_TASK_PRIO            2

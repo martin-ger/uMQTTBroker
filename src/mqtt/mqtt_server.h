@@ -6,12 +6,11 @@
 #include "osapi.h"
 #include "os_type.h"
 //#include "ip_addr.h"
+#include "mqtt.h"
 #include "espconn.h"
 //#include "lwip/ip.h"
 //#include "lwip/app/espconn.h"
 //#include "lwip/app/espconn_tcp.h"
-
-#include "mqtt.h"
 
 #define LOCAL_MQTT_CLIENT ((void*)-1)
 
