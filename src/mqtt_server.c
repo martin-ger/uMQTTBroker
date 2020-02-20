@@ -317,7 +317,8 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
     // Expect minimum the full fixed size header
     if (len + clientcon->mqtt_state.message_length_read > MQTT_BUF_SIZE || len < 2) {
 	MQTT_ERROR("MQTT: Message too short/long\r\n");
-	clientcon->mqtt_state.message_length_read = 0;
+	MQTT_server_disconnectClientCon(clientcon);
+	//clientcon->mqtt_state.message_length_read = 0;
 	return;
     }
  READPACKET:
