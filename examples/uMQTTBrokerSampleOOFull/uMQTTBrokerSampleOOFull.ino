@@ -26,9 +26,13 @@ public:
       Serial.println(addr.toString()+" connected");
       return true;
     }
-    
-    virtual bool onAuth(String username, String password) {
-      Serial.println("Username/Password: "+username+"/"+password);
+
+    virtual void onDisconnect(IPAddress addr, String client_id) {
+      Serial.println(addr.toString()+" ("+client_id+") disconnected");
+    }
+
+    virtual bool onAuth(String username, String password, String client_id) {
+      Serial.println("Username/Password/ClientId: "+username+"/"+password+"/"+client_id);
       return true;
     }
     
@@ -38,6 +42,20 @@ public:
       data_str[length] = '\0';
       
       Serial.println("received topic '"+topic+"' with data '"+(String)data_str+"'");
+      //printClients();
+    }
+
+    // Sample for the usage of the client info methods
+
+    virtual void printClients() {
+      for (int i = 0; i < getClientCount(); i++) {
+        IPAddress addr;
+        String client_id;
+         
+        getClientAddr(i, addr);
+        getClientId(i, client_id);
+        Serial.println("Client "+client_id+" on addr: "+addr.toString());
+      }
     }
 };
 
@@ -104,4 +122,3 @@ void loop()
   // wait a second
   delay(1000);
 }
-

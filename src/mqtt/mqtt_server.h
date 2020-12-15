@@ -14,8 +14,9 @@
 
 #define LOCAL_MQTT_CLIENT ((void*)-1)
 
-typedef bool (*MqttAuthCallback)(const char* username, const char *password, struct espconn *pesp_conn);
+typedef bool (*MqttAuthCallback)(const char* username, const char *password, const char* client_id, struct espconn *pesp_conn);
 typedef bool (*MqttConnectCallback)(struct espconn *pesp_conn, uint16_t client_count);
+typedef bool (*MqttDisconnectCallback)(struct espconn *pesp_conn, const char* client_id);
 
 typedef struct _MQTT_ClientCon {
   struct espconn *pCon;
@@ -42,12 +43,16 @@ typedef struct _MQTT_ClientCon {
 extern MQTT_ClientCon *clientcon_list;
 
 uint16_t MQTT_server_countClientCon();
+const char* MQTT_server_getClientId(uint16_t index);
+const struct espconn* MQTT_server_getClientPcon(uint16_t index);
+
 void MQTT_server_disconnectClientCon(MQTT_ClientCon *mqttClientCon);
 bool MQTT_server_deleteClientCon(MQTT_ClientCon *mqttClientCon);
 void MQTT_server_cleanupClientCons();
 
 bool MQTT_server_start(uint16_t portno, uint16_t max_subscriptions, uint16_t max_retained_topics);
 void MQTT_server_onConnect(MqttConnectCallback connectCb);
+void MQTT_server_onDisconnect(MqttDisconnectCallback connectCb);
 void MQTT_server_onAuth(MqttAuthCallback authCb);
 void MQTT_server_onData(MqttDataCallback dataCb);
 

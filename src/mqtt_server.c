@@ -35,6 +35,7 @@ LOCAL uint8_t zero_len_id[2] = { 0, 0 };
 MQTT_ClientCon *clientcon_list;
 LOCAL MqttDataCallback local_data_cb = NULL;
 LOCAL MqttConnectCallback local_connect_cb = NULL;
+LOCAL MqttDisconnectCallback local_disconnect_cb = NULL;
 LOCAL MqttAuthCallback local_auth_cb = NULL;
 
 MQTT_ClientCon dummy_clientcon;
@@ -149,6 +150,28 @@ uint16_t ICACHE_FLASH_ATTR MQTT_server_countClientCon() {
     return count;
 }
 
+const char* ICACHE_FLASH_ATTR MQTT_server_getClientId(uint16_t index) {
+    MQTT_ClientCon *p;
+    uint16_t count = 0;
+    for (p = clientcon_list; p != NULL; p = p->next, count++) {
+		if (count == index) {
+			return p->connect_info.client_id;
+		}
+	}
+    return NULL;
+}
+
+const struct espconn* ICACHE_FLASH_ATTR MQTT_server_getClientPcon(uint16_t index) {
+    MQTT_ClientCon *p;
+    uint16_t count = 0;
+    for (p = clientcon_list; p != NULL; p = p->next, count++) {
+		if (count == index) {
+			return p->pCon;
+		}
+	}
+    return NULL;
+}
+
 bool ICACHE_FLASH_ATTR MQTT_server_deleteClientCon(MQTT_ClientCon * mqttClientCon) {
     MQTT_INFO("MQTT: DeleteClientCon\r\n");
 
@@ -196,7 +219,10 @@ bool ICACHE_FLASH_ATTR MQTT_server_deleteClientCon(MQTT_ClientCon * mqttClientCo
     if (mqttClientCon->connect_info.client_id != NULL) {
 	/* Don't attempt to free if it's the zero_len array */
 	if (((uint8_t *) mqttClientCon->connect_info.client_id) != zero_len_id)
-	    os_free(mqttClientCon->connect_info.client_id);
+		if (local_disconnect_cb != NULL) {
+			local_disconnect_cb(mqttClientCon->pCon, mqttClientCon->connect_info.client_id);
+		}
+		os_free(mqttClientCon->connect_info.client_id);
 	mqttClientCon->connect_info.client_id = NULL;
     }
 
@@ -564,6 +590,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 	    if ((local_auth_cb != NULL) && 
 		local_auth_cb(clientcon->connect_info.username==NULL?"":clientcon->connect_info.username,
 			      clientcon->connect_info.password==NULL?"":clientcon->connect_info.password,
+				  clientcon->connect_info.client_id,
 			      clientcon->pCon) == false) {
 		MQTT_WARNING("MQTT: Authorization failed\r\n");
 
@@ -975,6 +1002,10 @@ void ICACHE_FLASH_ATTR MQTT_server_onData(MqttDataCallback dataCb) {
 
 void ICACHE_FLASH_ATTR MQTT_server_onConnect(MqttConnectCallback connectCb) {
     local_connect_cb = connectCb;
+}
+
+void ICACHE_FLASH_ATTR MQTT_server_onDisconnect(MqttDisconnectCallback disconnectCb) {
+    local_disconnect_cb = disconnectCb;
 }
 
 void ICACHE_FLASH_ATTR MQTT_server_onAuth(MqttAuthCallback authCb) {
