@@ -218,11 +218,13 @@ bool ICACHE_FLASH_ATTR MQTT_server_deleteClientCon(MQTT_ClientCon * mqttClientCo
 
     if (mqttClientCon->connect_info.client_id != NULL) {
 	/* Don't attempt to free if it's the zero_len array */
-	if (((uint8_t *) mqttClientCon->connect_info.client_id) != zero_len_id)
+	if (((uint8_t *) mqttClientCon->connect_info.client_id) != zero_len_id) {
 		if (local_disconnect_cb != NULL) {
 			local_disconnect_cb(mqttClientCon->pCon, mqttClientCon->connect_info.client_id);
 		}
 		os_free(mqttClientCon->connect_info.client_id);
+	}
+	
 	mqttClientCon->connect_info.client_id = NULL;
     }
 
