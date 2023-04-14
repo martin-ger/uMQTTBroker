@@ -10,7 +10,7 @@
 //
 
 #ifndef MQTT_BUF_SIZE
-#define MQTT_BUF_SIZE   1024
+#define MQTT_BUF_SIZE   2048
 #endif
 
 #ifndef QUEUE_BUFFER_SIZE
