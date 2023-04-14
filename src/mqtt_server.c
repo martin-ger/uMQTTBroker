@@ -347,7 +347,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
     if (len + clientcon->mqtt_state.message_length_read > MQTT_BUF_SIZE) {
 		MQTT_ERROR("MQTT: Message too long: %d\r\n", len + clientcon->mqtt_state.message_length_read);
 		MQTT_server_disconnectClientCon(clientcon);
-		clientcon->mqtt_state.message_length_read = 0;
+		//clientcon->mqtt_state.message_length_read = 0;
 		return;
     }
 
