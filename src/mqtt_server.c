@@ -600,6 +600,7 @@ static void ICACHE_FLASH_ATTR MQTT_ClientCon_recv_cb(void *arg, char *pdata, uns
 	    if ((local_auth_cb != NULL) && 
 		local_auth_cb(clientcon->connect_info.username==NULL?"":clientcon->connect_info.username,
 			      clientcon->connect_info.password==NULL?"":clientcon->connect_info.password,
+			      clientcon->connect_info.client_id,
 			      clientcon->pCon) == false) {
 		MQTT_WARNING("MQTT: Authorization failed\r\n");
 
